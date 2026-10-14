@@ -1,35 +1,29 @@
-- name: Preparar Java
-    uses: actions/setup-java@v5
-    with:
-      distribution: temurin
-      java-version: '17'
+name: Build Mundial Conversas APK
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
 
-  - name: Extrair projeto ZIP
-    run: |
-      sudo apt-get update
-      sudo apt-get install -y unzip
-      unzip -o Mundial_Conversas_2.0_GitHub.zip -d projeto
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar projeto
+        uses: actions/checkout@v4
 
-  - name: Procurar e compilar projeto
-    run: |
-      FILE=$(find projeto -type f \( -name settings.gradle -o -name settings.gradle.kts -o -name build.gradle -o -name build.gradle.kts \) | head -n 1)
-      if [ -z "$FILE" ]; then
-        echo "Não encontrei os arquivos Gradle dentro do ZIP."
-        exit 1
-      fi
-      DIR=$(dirname "$FILE")
-      cd "$DIR"
-      if [ -f gradlew ]; then
-        chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon
-      else
-        gradle assembleDebug --no-daemon
-      fi
+      - name: Preparar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
 
-  - name: Guardar APK
-    if: success()
-    uses: actions/upload-artifact@v4
-    with:
-      name: Mundial-Conversas-APK
-      path: projeto/**/build/outputs/apk/debug/*.apk
-      if-no-files-found: error
+      - name: Instalar ferramentas
+        run: sudo apt-get update && sudo apt-get install -y unzip
+
+      - name: Extrair projeto
+        run: unzip -o Mundial_Conversas_2.0_GitHub.zip -d projeto
+
+      - name: Verificar projeto Android
+        run: |
+          find projeto -type f \( -name settings.gradle -o -name settings.gradle.kts \)
