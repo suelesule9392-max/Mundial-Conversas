@@ -1,4 +1,5 @@
 name: Build Mundial Conversas APK
+
 on:
   workflow_dispatch:
   push:
@@ -13,7 +14,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Preparar Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -24,6 +25,26 @@ jobs:
       - name: Extrair projeto
         run: unzip -o Mundial_Conversas_2.0_GitHub.zip -d projeto
 
-      - name: Verificar projeto Android
+      - name: Construir APK
         run: |
-          find projeto -type f \( -name settings.gradle -o -name settings.gradle.kts \)
+          cd projeto
+          DIR=$(find . -type f -name settings.gradle -o -name settings.gradle.kts | head -n 1)
+          if [ -z "$DIR" ]; then
+            echo "Arquivo settings.gradle não encontrado"
+            exit 1
+          fi
+          cd "$(dirname "$DIR")"
+          chmod +x gradlew 2>/dev/null || true
+          if [ -f gradlew ]; then
+            ./gradlew assembleDebug --no-daemon
+          else
+            gradle assembleDebug --no-daemon
+          fi
+
+      - name: Disponibilizar APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mundial-Conversas-APK
+          path: projeto/**/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
