@@ -1,3 +1,4 @@
+
 name: Build Mundial Conversas APK
 
 on:
@@ -26,9 +27,12 @@ jobs:
         run: unzip -o Mundial_Conversas_2.0_GitHub.zip -d projeto
 
       - name: Construir APK
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
         run: |
           cd projeto
-          DIR=$(find . -type f -name settings.gradle -o -name settings.gradle.kts | head -n 1)
+          DIR=$(find . \( -type f -name settings.gradle -o -type f -name settings.gradle.kts \) | head -n 1)
           if [ -z "$DIR" ]; then
             echo "Arquivo settings.gradle não encontrado"
             exit 1
